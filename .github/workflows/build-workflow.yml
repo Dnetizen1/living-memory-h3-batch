@@ -1,0 +1,42 @@
+
+name: Build ready-to-use MiniMax H3 batch workflow
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/build_workflow.py"
+      - "scripts/test_build_workflow.py"
+      - ".github/workflows/build-workflow.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run offline wiring tests
+        run: python scripts/test_build_workflow.py
+
+      - name: Build complete H3 batch workflow
+        run: python scripts/build_workflow.py --output workflows/video_minimax_h3_i2v_batch.json
+
+      - name: Commit generated workflow
+        run: |
+          git add workflows/video_minimax_h3_i2v_batch.json
+          if ! git diff --staged --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Build prewired H3 I2V batch workflow"
+            git push
+          fi
